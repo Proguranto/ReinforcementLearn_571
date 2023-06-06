@@ -15,13 +15,19 @@ def train_model(policy, baseline, trajs, policy_optim, baseline_optim, gamma=0.9
     states_all = []
     actions_all = []
     returns_all = []
+    losses = []
     for traj in trajs:
         states_singletraj = traj['observations']
         actions_singletraj = traj['actions']
         rewards_singletraj = traj['rewards']
         returns_singletraj = np.zeros_like(rewards_singletraj)
         # TODO start
-            
+        # print("returns_all: ", returns_all)
+        for i in range(rewards_singletraj.shape[0] - 1, -1, -1):
+            if i == rewards_singletraj.shape[0] - 1:
+                returns_singletraj[i] = rewards_singletraj[i]
+            else:
+                returns_singletraj[i] = rewards_singletraj[i] + gamma * returns_singletraj[i + 1]
         # TODO end
         states_all.append(states_singletraj)
         actions_all.append(actions_singletraj)
@@ -33,7 +39,7 @@ def train_model(policy, baseline, trajs, policy_optim, baseline_optim, gamma=0.9
     # TODO: Normalize the returns by subtracting mean and dividing by std
     # Hint: Just do return - return.mean()/ (return.std() + EPS), where EPS is a small constant for numerics
     # TODO start
-    
+    returns = (returns - np.mean(returns)) / (np.std(returns) + 1e-9)
     # TODO end
     
     # TODO: Train baseline by regressing onto returns
@@ -47,12 +53,16 @@ def train_model(policy, baseline, trajs, policy_optim, baseline_optim, gamma=0.9
         for i in range(n // baseline_train_batch_size):
             batch_index = arr[baseline_train_batch_size * i: baseline_train_batch_size * (i + 1)]
             batch_index = torch.LongTensor(batch_index).to(device)
-            # TODO start         
-            
+            # TODO start
+            baseline_prediction = baseline(torch.index_select(torch.from_numpy(states).float().to(device), dim=0, index=batch_index))
+            returns_to_compare = torch.index_select(torch.from_numpy(returns).float().to(device), dim=0, index=batch_index)
+            loss = torch.nn.MSELoss()(baseline_prediction, returns_to_compare)
             # TODO end
             baseline_optim.zero_grad()
             loss.backward()
             baseline_optim.step()
+
+        losses.append(loss.item())
             
     # TODO: Train policy by optimizing surrogate objective: -log prob * (return - baseline)
     # Hint: Policy gradient is given by: \grad log prob(a|s)* (return - baseline)
@@ -64,7 +74,7 @@ def train_model(policy, baseline, trajs, policy_optim, baseline_optim, gamma=0.9
     log_policy = log_density(torch.Tensor(actions).to(device), mu, std, logstd)
     baseline_pred = baseline(torch.from_numpy(states).float().to(device))
     # TODO start
-    
+    loss = torch.matmul(-torch.reshape(log_policy, (log_policy.shape[0],)), torch.reshape((torch.from_numpy(returns).float().to(device) - baseline_pred), (returns.shape[0],)))
     # TODO end
     
     policy_optim.zero_grad()
@@ -72,15 +82,18 @@ def train_model(policy, baseline, trajs, policy_optim, baseline_optim, gamma=0.9
     policy_optim.step()
     
     del states, actions, returns, states_all, actions_all, returns_all
+    return losses
 
 # Training loop for policy gradient
 def simulate_policy_pg(env, policy, baseline, num_epochs=20000, max_path_length=200, pg_batch_size=100, 
                         gamma=0.99, baseline_train_batch_size=64, baseline_num_epochs=5, print_freq=10, render=False):
     policy_optim = optim.Adam(policy.parameters())
     baseline_optim = optim.Adam(baseline.parameters())
+    losses = []
 
     for iter_num in range(num_epochs):
         sample_trajs = []
+        
 
         # Sampling trajectories
         for it in range(pg_batch_size):
@@ -94,5 +107,7 @@ def simulate_policy_pg(env, policy, baseline, num_epochs=20000, max_path_length=
             print("Episode: {}, reward: {}, max path length: {}".format(iter_num, rewards_np, path_length))
 
         # Training model
-        train_model(policy, baseline, sample_trajs, policy_optim, baseline_optim, gamma=gamma, 
+        losses_train = train_model(policy, baseline, sample_trajs, policy_optim, baseline_optim, gamma=gamma, 
                     baseline_train_batch_size=baseline_train_batch_size, baseline_num_epochs=baseline_num_epochs)
+        losses.extend(losses_train)
+    print("loss: ", losses)

@@ -1,0 +1,31 @@
+/opt/conda/envs/cse571a3/lib/python3.8/site-packages/gym/envs/registration.py:555: UserWarning: [33mWARN: The environment Reacher-v2 is out of date. You should consider upgrading to version `v4`.[0m
+  logger.warn(
+/opt/conda/envs/cse571a3/lib/python3.8/site-packages/gym/envs/mujoco/mujoco_env.py:190: UserWarning: [33mWARN: This version of the mujoco environments depends on the mujoco-py bindings, which are no longer maintained and may stop working. Please upgrade to the v4 versions of the environments (which depend on the mujoco python bindings instead), unless you are trying to precisely replicate previous works).[0m
+  logger.warn(
+/opt/conda/envs/cse571a3/lib/python3.8/site-packages/gym/utils/passive_env_checker.py:233: DeprecationWarning: `np.bool8` is a deprecated alias for `np.bool_`.  (Deprecated NumPy 1.24)
+  if not isinstance(terminated, (bool, np.bool8)):
+using device cuda
+Imported Expert data successfully
+Expert policy loaded
+Average DAgger return is -10.941936973875745
+Average DAgger return is -106.5170370235755
+Average DAgger return is -135.88939885383203
+Average DAgger return is -9.837433589665109
+Traceback (most recent call last):
+  File "main.py", line 127, in <module>
+    simulate_policy_dagger(env, policy, expert_data, expert_policy, num_epochs=num_epochs, episode_length=episode_length,
+  File "/home/guranto/Desktop/Classes/CSE 571/ReinforcementLearn_571/dagger.py", line 39, in simulate_policy_dagger
+    a_hat = policy(s_batch)
+  File "/opt/conda/envs/cse571a3/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/guranto/Desktop/Classes/CSE 571/ReinforcementLearn_571/utils.py", line 64, in forward
+    next_pred = self.trunk(obs)
+  File "/opt/conda/envs/cse571a3/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/opt/conda/envs/cse571a3/lib/python3.8/site-packages/torch/nn/modules/container.py", line 217, in forward
+    input = module(input)
+  File "/opt/conda/envs/cse571a3/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/opt/conda/envs/cse571a3/lib/python3.8/site-packages/torch/nn/modules/linear.py", line 114, in forward
+    return F.linear(input, self.weight, self.bias)
+KeyboardInterrupt

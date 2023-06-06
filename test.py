@@ -1,9 +1,7 @@
 import torch.nn as nn
 import torch
+import numpy as np
 
-loss = nn.MSELoss()
-input = torch.randn((1, 3), requires_grad=True)
-target = torch.randn(1, 3)
-output = loss(input, target)
+loss = np.array([3, 4, 5])
 
-print(target[0][1])
+print(3.0 * loss)

@@ -47,8 +47,9 @@ if __name__ == '__main__':
         max_path_length=200
         pg_batch_size=100
         gamma=0.99
-        baseline_train_batch_size=64
-        baseline_num_epochs=5
+        # baseline_train_batch_size=64
+        baseline_train_batch_size=10
+        baseline_num_epochs=64
         print_freq=10
 
         if not args.test:
@@ -69,6 +70,7 @@ if __name__ == '__main__':
         hidden_depth = 2
         obs_size = env.observation_space.shape[0]
         ac_size = env.action_space.shape[0]
+        print(obs_size, ac_size, hidden_dim, hidden_depth)
         policy = BCPolicy(obs_size, ac_size, hidden_dim=hidden_dim, hidden_depth=hidden_depth) # 10 dimensional latent
         policy.to(device)
 
@@ -78,7 +80,7 @@ if __name__ == '__main__':
 
         # Training hyperparameters
         episode_length = 50
-        num_epochs = 500
+        num_epochs = 200
         batch_size = 32
         num_validation_runs = 100
 

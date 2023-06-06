@@ -88,7 +88,8 @@ def rollout(
     agent_info = None
     path_length = 0
 
-    o = env.reset()
+    o = env.reset()[0]
+    # o = env.reset()
     if render:
         env.render()
 
@@ -104,7 +105,8 @@ def rollout(
             raise KeyError("Invalid agent name")
 
         # Step the simulation forward
-        next_o, r, done, env_info = env.step(copy.deepcopy(action))
+        next_o, r, done, extra_done, env_info = env.step(copy.deepcopy(action))
+        # next_o, r, done, env_info = env.step(copy.deepcopy(action))
         
         # Render the environment
         if render:

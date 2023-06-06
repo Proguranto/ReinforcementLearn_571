@@ -13,17 +13,14 @@ def simulate_policy_bc(env, policy, expert_data, num_epochs=500, episode_length=
     idxs = np.array(range(len(expert_data)))
     num_batches = len(idxs)*episode_length // batch_size
     losses = []
-
-    observations = torch.tensor([])
-    actions = torch.tensor([])
-    for i in idxs:
-      o = torch.tensor(expert_data[i]["observations"])
-      a = torch.tensor(expert_data[i]["actions"])
-      observations = torch.cat((observations, o), 0)
-      actions = torch.cat((actions, a), 0)
-
-    observations = observations.to(torch.float32).to("cuda")
-    actions = actions.to(torch.float32).to("cuda")
+    loss_fn = torch.nn.MSELoss()
+    dataset = {k: v for d in expert_data for k, v in d.items()}
+    for d in expert_data:
+        for k, v in d.items():
+            if k not in dataset:
+                dataset[k] = v
+            else:
+                dataset[k] = np.concatenate((dataset[k], v), axis=0)
 
     for epoch in range(num_epochs): 
         ## TODO Students
@@ -32,9 +29,15 @@ def simulate_policy_bc(env, policy, expert_data, num_epochs=500, episode_length=
         for i in range(num_batches):
             optimizer.zero_grad()
             # TODO start: Fill in your behavior cloning implementation here
-            s_batch, a_batch = observations[i * batch_size : (i + 1) * batch_size], actions[i * batch_size : (i + 1) * batch_size]
-            a_hat = policy.forward(s_batch)
-            loss = torch.nn.MSELoss()(a_hat, a_batch)
+            obs = dataset["observations"]
+            acts = dataset["actions"]
+            sampled_indices = np.random.choice(a=range(obs.shape[0]), size=batch_size, replace=False)
+            s_batch = np.array([obs[i] for i in sampled_indices])
+            a_batch = np.array([acts[i] for i in sampled_indices])
+            s_batch = torch.tensor(s_batch).to(torch.float32).to("cuda")
+            a_batch = torch.tensor(a_batch).to(torch.float32).to("cuda")
+            a_hat = policy(s_batch)
+            loss = loss_fn(a_hat, a_batch)
             # TODO end
             loss.backward()
             optimizer.step()
